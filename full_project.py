@@ -86,46 +86,43 @@ class Backtracking:
 # Page layout
 # ----------------------------------------------------
 st.set_page_config(layout="wide")
-
 sidebar = st.sidebar
 sidebar.title("Graph Inputs & Details")
 center_area = st.container()
 
 # ----------------------------------------------------
-# Sidebar: Inputs
+# Sidebar Inputs
 # ----------------------------------------------------
 num_nodes = sidebar.number_input("Number of Nodes", min_value=2, step=1, value=5)
 num_colors = sidebar.number_input("Number of Colors", min_value=1, max_value=20, value=3)
-
-# Generate nodes and colors
-dic = {chr(ord('a') + i): [] for i in range(num_nodes)}
 generated_colors = generate_distinct_colors(num_colors)
 
-# Show node and color details in sidebar
-# sidebar.subheader("Nodes Dictionary")
-# for key in dic:
-#     sidebar.write(f"{key}: {dic[key]}")
-
-# sidebar.subheader("Colors Used")
-# sidebar.write(generated_colors)
-
 # ----------------------------------------------------
-# Generate All Possible Edges
+# Initialize session state
 # ----------------------------------------------------
-# -----------------------------
-# Generate nodes dictionary and edges
-# -----------------------------
-dic = {chr(ord('a') + i): [] for i in range(num_nodes)}
+if 'dic' not in st.session_state:
+    st.session_state.dic = {}
+if 'edge_state' not in st.session_state:
+    st.session_state.edge_state = {}
 
+# Add new nodes if num_nodes increased
+for i in range(len(st.session_state.dic), num_nodes):
+    new_node = chr(ord('a') + i)
+    st.session_state.dic[new_node] = {}
+
+# Generate all possible edges for current nodes
+keys = list(st.session_state.dic.keys())
 edges = []
-keys = list(dic.keys())
 for i in range(len(keys)):
     for j in range(i + 1, len(keys)):
         edges.append((keys[i], keys[j]))
+        # initialize checkbox state
+        if (keys[i], keys[j]) not in st.session_state.edge_state:
+            st.session_state.edge_state[(keys[i], keys[j])] = False
 
-# -----------------------------
-# Main Area: Edge selection
-# -----------------------------
+# ----------------------------------------------------
+# Main Area: Edge selection in Expander
+# ----------------------------------------------------
 selected_edges = []
 
 with center_area:
@@ -133,23 +130,19 @@ with center_area:
     st.subheader("Select edges for your graph")
 
     with st.expander("Click to select edges"):
-        for idx, edge in enumerate(edges):
-            # use num_nodes in key to ensure unique key for Streamlit
-            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{num_nodes}_{idx}"):
-                selected_edges.append(edge)
+        for a, b in edges:
+            key = (a, b)
+            st.session_state.edge_state[key] = st.checkbox(f"{a} - {b}", value=st.session_state.edge_state[key], key=f"{a}_{b}")
+            if st.session_state.edge_state[key]:
+                selected_edges.append((a, b))
 
-# -----------------------------
+# ----------------------------------------------------
 # Update adjacency dictionary
-# -----------------------------
+# ----------------------------------------------------
+dic = {k: [] for k in st.session_state.dic.keys()}
 for a, b in selected_edges:
     dic[a].append(b)
     dic[b].append(a)
-
-
-# Sidebar: show updated dictionary
-# sidebar.subheader("Updated Dictionary with Edges")
-# for key in dic:
-#     sidebar.write(f"{key}: {dic[key]}")
 
 # ----------------------------------------------------
 # Backtracking coloring
@@ -158,16 +151,9 @@ b = Backtracking(dic, generated_colors)
 start_node = list(dic.keys())[0]
 visual_dic = b.dive(start_node, b.color)
 
-# sidebar.subheader("Graph Coloring Result")
-# sidebar.write(visual_dic)
-
 # ----------------------------------------------------
 # Draw Graph in Main Area
 # ----------------------------------------------------
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
-
-
-
-
