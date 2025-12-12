@@ -112,29 +112,39 @@ generated_colors = generate_distinct_colors(num_colors)
 # ----------------------------------------------------
 # Generate All Possible Edges
 # ----------------------------------------------------
+# -----------------------------
+# Generate nodes dictionary and edges
+# -----------------------------
+dic = {chr(ord('a') + i): [] for i in range(num_nodes)}
+
 edges = []
 keys = list(dic.keys())
 for i in range(len(keys)):
     for j in range(i + 1, len(keys)):
         edges.append((keys[i], keys[j]))
 
-# ----------------------------------------------------
-# Main Area: Edge Selection in Expander
-# ----------------------------------------------------
+# -----------------------------
+# Main Area: Edge selection
+# -----------------------------
+selected_edges = []
+
 with center_area:
     st.header("Graph Coloring Visualizer")
     st.subheader("Select edges for your graph")
 
-    selected_edges = []
     with st.expander("Click to select edges"):
         for idx, edge in enumerate(edges):
-            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+            # use num_nodes in key to ensure unique key for Streamlit
+            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{num_nodes}_{idx}"):
                 selected_edges.append(edge)
 
-# Update adjacency list
+# -----------------------------
+# Update adjacency dictionary
+# -----------------------------
 for a, b in selected_edges:
     dic[a].append(b)
     dic[b].append(a)
+
 
 # Sidebar: show updated dictionary
 # sidebar.subheader("Updated Dictionary with Edges")
@@ -157,6 +167,7 @@ visual_dic = b.dive(start_node, b.color)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
 
