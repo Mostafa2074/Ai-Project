@@ -1,25 +1,22 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
-import random
 import colorsys
 
-
-# ----------------------------------------------------
-# Generate Distinct Colors (Not Similar)
-# ----------------------------------------------------
+# -------------------------------
+# Generate Distinct Colors
+# -------------------------------
 def generate_distinct_colors(n):
     colors = []
     for i in range(n):
-        hue = i / n                      # evenly spaced hues
+        hue = i / n
         r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
         colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
     return colors
 
-
-# ----------------------------------------------------
-# Draw Graph Function (SMALLER VISUAL)
-# ----------------------------------------------------
+# -------------------------------
+# Draw Graph
+# -------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
     for node, neighbors in graph.items():
@@ -28,34 +25,18 @@ def draw_graph(graph, node_colors=None):
 
     pos = nx.spring_layout(G, k=0.8, iterations=200)
 
-    if node_colors:
-        colors = [node_colors.get(node, "lightblue") for node in G.nodes]
-    else:
-        colors = "lightblue"
+    colors = [node_colors.get(node, "lightblue") for node in G.nodes] if node_colors else "lightblue"
 
-    # Smaller figure
-    fig, ax = plt.subplots(figsize=(3, 2))  # small figure
-    nx.draw(
-        G, pos, with_labels=True,
-        node_color=colors, node_size=300,
-        font_size=8, font_weight='bold',
-        ax=ax
-    )
+    fig, ax = plt.subplots(figsize=(3, 2))
+    nx.draw(G, pos, with_labels=True, node_color=colors, node_size=300, font_size=8, font_weight='bold', ax=ax)
     plt.tight_layout()
-
-    # VERY IMPORTANT: use_container_width=False keeps it small
     st.pyplot(fig, use_container_width=False)
     plt.close(fig)
 
-
-
-
-
-# ----------------------------------------------------
-# Backtracking Class
-# ----------------------------------------------------
+# -------------------------------
+# Backtracking Coloring
+# -------------------------------
 class Backtracking:
-
     def __init__(self, graph, colors):
         self.graph = graph
         self.explored = {}
@@ -81,7 +62,6 @@ class Backtracking:
                     for key in slice_keys:
                         del self.explored[key]
                     return self.dive(node, clr[1:])
-
         return self.explored
 
     def search(self, node, colors):
@@ -92,97 +72,89 @@ class Backtracking:
                     temp_color.remove(self.explored[i])
                 except:
                     pass
-
         return temp_color if temp_color else None
 
-
-# ----------------------------------------------------
-# PAGE LAYOUT
-# ----------------------------------------------------
+# -------------------------------
+# Streamlit App
+# -------------------------------
 st.set_page_config(layout="wide")
-
 sidebar = st.sidebar
 sidebar.title("Graph Coloring Details")
 center_area = st.container()
 
+# -------------------------------
+# Session State Initialization
+# -------------------------------
+if "nodes" not in st.session_state:
+    st.session_state.nodes = []
+if "edges" not in st.session_state:
+    st.session_state.edges = []
 
-# ----------------------------------------------------
-# UI Input - Number of Nodes (CENTER)
-# ----------------------------------------------------
+# -------------------------------
+# Add Nodes
+# -------------------------------
 with center_area:
     st.header("Graph Coloring Visualizer")
-    st.write("Customize the graph and choose coloring options.")
+    st.write("Add nodes dynamically to your graph.")
 
-    n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
+    new_node = st.text_input("Enter new node name (e.g., a, b, c)")
+    if st.button("Add Node") and new_node:
+        if new_node not in st.session_state.nodes:
+            st.session_state.nodes.append(new_node)
 
-# Create nodes dictionary
-dic = {chr(ord('a') + i): [] for i in range(n)}
-
-# Sidebar shows dictionary
+# Show current nodes
 sidebar.subheader("Nodes Dictionary")
+dic = {node: [] for node in st.session_state.nodes}
 for key in dic:
     sidebar.write(f"{key}: {dic[key]}")
 
-
-# ----------------------------------------------------
-# Colors selection (CENTER) — NO PRINTING IN CENTER
-# ----------------------------------------------------
-with center_area:
-    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
-    generated_colors = generate_distinct_colors(num_colors)
-
-# Sidebar also displays them
-sidebar.subheader("Colors Used")
-sidebar.write(generated_colors)
-
-
-# ----------------------------------------------------
-# Generate All Possible Edges
-# ----------------------------------------------------
-edges = []
-keys = list(dic.keys())
-for i in range(len(keys)):
-    for j in range(i + 1, len(keys)):
-        edges.append((keys[i], keys[j]))
-
-# CENTER: select edges
-# CENTER: select edges inside an expander
+# -------------------------------
+# Select Edges
+# -------------------------------
 with center_area:
     st.subheader("Select Edges")
-    
-    # Collapsible section
     with st.expander("Click to select edges"):
-        selected_edges = []
-        for idx, edge in enumerate(edges):
-            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
-                selected_edges.append(edge)
+        for i, node in enumerate(st.session_state.nodes):
+            for prev_node in st.session_state.nodes[:i]:
+                key_name = f"edge_{prev_node}_{node}"
+                if key_name not in st.session_state:
+                    st.session_state[key_name] = False
+                st.session_state[key_name] = st.checkbox(f"{prev_node} - {node}", value=st.session_state[key_name], key=key_name)
+                if st.session_state[key_name]:
+                    if (prev_node, node) not in st.session_state.edges and (node, prev_node) not in st.session_state.edges:
+                        st.session_state.edges.append((prev_node, node))
 
-
-# Update dictionary
-for a, b in selected_edges:
+# Update dictionary with edges
+for a, b in st.session_state.edges:
     dic[a].append(b)
     dic[b].append(a)
 
-# Sidebar: updated dictionary
+# Show updated dictionary
 sidebar.subheader("Updated Dictionary with Edges")
 for key in dic:
     sidebar.write(f"{key}: {dic[key]}")
 
-
-# ----------------------------------------------------
-# Run Backtracking Coloring
-# ----------------------------------------------------
-b = Backtracking(dic, generated_colors)
-node = list(b.graph.keys())[0]
-visual_dic = b.dive(node, b.color)
-
-sidebar.subheader("Coloring Result")
-sidebar.write(visual_dic)
-
-
-# ----------------------------------------------------
-# Draw Graph (CENTER) — SMALLER SIZE
-# ----------------------------------------------------
+# -------------------------------
+# Select Colors
+# -------------------------------
 with center_area:
-    st.subheader("Colored Graph Visualization")
-    draw_graph(dic, visual_dic)
+    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
+    generated_colors = generate_distinct_colors(num_colors)
+sidebar.subheader("Colors Used")
+sidebar.write(generated_colors)
+
+# -------------------------------
+# Run Backtracking
+# -------------------------------
+if dic:
+    b = Backtracking(dic, generated_colors)
+    node = list(b.graph.keys())[0]
+    visual_dic = b.dive(node, b.color)
+
+    sidebar.subheader("Coloring Result")
+    sidebar.write(visual_dic)
+
+    # Draw Graph
+    with center_area:
+        st.subheader("Colored Graph Visualization")
+        draw_graph(dic, visual_dic)
