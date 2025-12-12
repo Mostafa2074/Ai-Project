@@ -48,26 +48,7 @@ def draw_graph(graph, node_colors=None):
     plt.close(fig)
 
 
-# ----------------------------------------------------
-# Draw Initial Graph (without edges)
-# ----------------------------------------------------
-def draw_initial_graph(nodes):
-    G = nx.Graph()
-    for node in nodes:
-        G.add_node(node)
-    
-    pos = nx.spring_layout(G, k=0.8, iterations=200)
-    
-    fig, ax = plt.subplots(figsize=(3, 2))  # small figure
-    nx.draw(
-        G, pos, with_labels=True,
-        node_color="lightblue", node_size=300,
-        font_size=8, font_weight='bold',
-        ax=ax
-    )
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=False)
-    plt.close(fig)
+
 
 
 # ----------------------------------------------------
@@ -134,9 +115,8 @@ with center_area:
 
     n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
 
-# Create nodes dictionary (initially empty edges)
-nodes = [chr(ord('a') + i) for i in range(n)]
-dic = {node: [] for node in nodes}
+# Create nodes dictionary
+dic = {chr(ord('a') + i): [] for i in range(n)}
 
 # Sidebar shows dictionary
 sidebar.subheader("Nodes Dictionary")
@@ -145,15 +125,7 @@ for key in dic:
 
 
 # ----------------------------------------------------
-# Show initial graph with nodes only
-# ----------------------------------------------------
-with center_area:
-    st.subheader("Initial Graph (Nodes Only)")
-    draw_initial_graph(nodes)
-
-
-# ----------------------------------------------------
-# Colors selection (CENTER)
+# Colors selection (CENTER) — NO PRINTING IN CENTER
 # ----------------------------------------------------
 with center_area:
     num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
@@ -165,90 +137,52 @@ sidebar.write(generated_colors)
 
 
 # ----------------------------------------------------
-# Manually Create Edges by Selecting Nodes
+# Generate All Possible Edges
 # ----------------------------------------------------
+edges = []
+keys = list(dic.keys())
+for i in range(len(keys)):
+    for j in range(i + 1, len(keys)):
+        edges.append((keys[i], keys[j]))
+
+# CENTER: select edges
+# CENTER: select edges inside an expander
 with center_area:
-    st.subheader("Create Edges")
+    st.subheader("Select Edges")
     
-    # Create two columns for node selection
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        node1 = st.selectbox("Select first node", nodes, key="node1")
-    
-    with col2:
-        # Filter out node1 from the second node selection
-        available_nodes = [n for n in nodes if n != node1]
-        node2 = st.selectbox("Select second node", available_nodes, key="node2")
-    
-    with col3:
-        if st.button("Add Edge", type="primary"):
-            # Add edge if it doesn't exist
-            if node2 not in dic[node1]:
-                dic[node1].append(node2)
-                dic[node2].append(node1)
-                st.success(f"Edge added: {node1} - {node2}")
-            else:
-                st.warning(f"Edge {node1} - {node2} already exists!")
-        
-        if st.button("Remove Edge", type="secondary"):
-            # Remove edge if it exists
-            if node2 in dic[node1]:
-                dic[node1].remove(node2)
-                dic[node2].remove(node1)
-                st.info(f"Edge removed: {node1} - {node2}")
-            else:
-                st.warning(f"Edge {node1} - {node2} doesn't exist!")
+    # Collapsible section
+    with st.expander("Click to select edges"):
+        selected_edges = []
+        for idx, edge in enumerate(edges):
+            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+                selected_edges.append(edge)
+
+
+# Update dictionary
+for a, b in selected_edges:
+    dic[a].append(b)
+    dic[b].append(a)
 
 # Sidebar: updated dictionary
-sidebar.subheader("Current Graph Structure")
+sidebar.subheader("Updated Dictionary with Edges")
 for key in dic:
     sidebar.write(f"{key}: {dic[key]}")
 
 
 # ----------------------------------------------------
-# Show current edges list
+# Run Backtracking Coloring
+# ----------------------------------------------------
+b = Backtracking(dic, generated_colors)
+node = list(b.graph.keys())[0]
+visual_dic = b.dive(node, b.color)
+
+sidebar.subheader("Coloring Result")
+sidebar.write(visual_dic)
+
+
+# ----------------------------------------------------
+# Draw Graph (CENTER) — SMALLER SIZE
 # ----------------------------------------------------
 with center_area:
-    st.subheader("Current Edges")
-    
-    # Collect all edges
-    current_edges = []
-    for node in dic:
-        for neighbor in dic[node]:
-            # Add edge only once (avoid duplicates)
-            edge = tuple(sorted([node, neighbor]))
-            if edge not in current_edges:
-                current_edges.append(edge)
-    
-    if current_edges:
-        st.write("Edges in the graph:")
-        for edge in current_edges:
-            st.write(f"{edge[0]} - {edge[1]}")
-    else:
-        st.write("No edges added yet.")
-
-
-# ----------------------------------------------------
-# Run Backtracking Coloring (if graph has edges)
-# ----------------------------------------------------
-if current_edges:  # Only run coloring if there are edges
-    b = Backtracking(dic, generated_colors)
-    node = list(b.graph.keys())[0]
-    visual_dic = b.dive(node, b.color)
-    
-    sidebar.subheader("Coloring Result")
-    sidebar.write(visual_dic)
-    
-    # ----------------------------------------------------
-    # Draw Colored Graph (CENTER) — SMALLER SIZE
-    # ----------------------------------------------------
-    with center_area:
-        st.subheader("Colored Graph Visualization")
-        draw_graph(dic, visual_dic)
-else:
-    with center_area:
-        st.info("Add edges to the graph to see the coloring result.")
-        # Draw empty graph
-        st.subheader("Current Graph")
-        draw_initial_graph(nodes)
+    st.subheader("Colored Graph Visualization")
+    draw_graph(dic, visual_dic)
