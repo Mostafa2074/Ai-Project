@@ -33,16 +33,17 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    # SMALLER FIGURE
-    plt.figure(figsize=(3, 2.5))  # <<< smaller width & height
+    # VERY SMALL FIGURE
+    plt.figure(figsize=(2.5, 2))   # width x height in inches
     nx.draw(
         G, pos, with_labels=True,
-        node_color=colors, node_size=400,  # smaller nodes
-        font_size=9, font_weight='bold'    # smaller labels
+        node_color=colors, node_size=300,  # smaller nodes
+        font_size=8, font_weight='bold'    # smaller labels
     )
     plt.tight_layout()
-    st.pyplot(plt)
+    st.pyplot(plt, bbox_inches='tight', dpi=80)  # smaller output
     plt.close()
+
 
 
 
@@ -180,4 +181,5 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
