@@ -186,5 +186,3 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
-
-i want when i add nodes dont add all possible edges only edges which can be connected to my graph
