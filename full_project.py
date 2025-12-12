@@ -2,13 +2,19 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
 import random
+import colorsys
 
 
 # ----------------------------------------------------
-# Generate Random Colors
+# Generate Distinct Colors (Not Similar)
 # ----------------------------------------------------
-def random_hex_color():
-    return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+def generate_distinct_colors(n):
+    colors = []
+    for i in range(n):
+        hue = i / n                      # evenly spaced hues
+        r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
+        colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
+    return colors
 
 
 # ----------------------------------------------------
@@ -103,11 +109,11 @@ for idx, key in enumerate(dic.keys()):
     col.write(f"{key}: {dic[key]}")
 
 # ----------------------------------------------------
-# UI Input - Number of Colors + Generate Random Colors
+# UI Input - Number of Colors (Distinct Colors)
 # ----------------------------------------------------
 num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
-generated_colors = [random_hex_color() for _ in range(num_colors)]
-st.write("Generated colors:", generated_colors)
+generated_colors = generate_distinct_colors(num_colors)
+st.write("Generated Distinct Colors:", generated_colors)
 
 # ----------------------------------------------------
 # Generate All Possible Edges
