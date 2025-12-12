@@ -1,8 +1,19 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import streamlit as st
+import random
 
 
+# ----------------------------------------------------
+# Generate Random Colors
+# ----------------------------------------------------
+def random_hex_color():
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+
+# ----------------------------------------------------
+# Draw Graph Function
+# ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
     for node, neighbors in graph.items():
@@ -22,72 +33,68 @@ def draw_graph(graph, node_colors=None):
         node_color=colors, node_size=800,
         font_size=12, font_weight='bold'
     )
-    
-    st.pyplot(plt)  # <-- Streamlit displays the figure
+
+    st.pyplot(plt)
     plt.close()
 
+
+# ----------------------------------------------------
+# Backtracking Class
+# ----------------------------------------------------
 class Backtracking:
 
-    def __init__(self, graph):
+    def __init__(self, graph, colors):
         self.graph = graph
         self.explored = {}
-        self.color = ['red', 'blue', 'green']
+        self.color = colors
 
     def dive(self, node, colors):
-        print(node)
-        print(self.explored)
-        
         clr = self.search(node, colors)
-        if clr == None:
+        if clr is None:
             return None
         else:
-            self.explored[node] = clr[0]    
-        if len(list(self.explored.keys())) == len(list(self.graph.keys())):
+            self.explored[node] = clr[0]
+
+        if len(self.explored) == len(self.graph):
             return self.explored
-    
-        else:
-            for i in self.graph[node]:
-                if i not in list(self.explored.keys()):
-                    print(i,'kk')
-                    temp = self.dive(i, self.color)
-                    if temp == None:
-                        keys = list(self.explored.keys())
-                        k = keys.index(node)
-                        slice_keys = keys[k:]
-                        for key in slice_keys:
-                            del self.explored[key] 
-                        # del explored[node]
-                        return self.dive(node, clr[1:])
-                
-            return self.explored
-                
+
+        for i in self.graph[node]:
+            if i not in self.explored:
+                temp = self.dive(i, self.color)
+                if temp is None:
+                    keys = list(self.explored.keys())
+                    k = keys.index(node)
+                    slice_keys = keys[k:]
+                    for key in slice_keys:
+                        del self.explored[key]
+                    return self.dive(node, clr[1:])
+
+        return self.explored
 
     def search(self, node, colors):
         temp_color = colors.copy()
         for i in self.graph[node]:
-            if i in list(self.explored.keys()):
+            if i in self.explored:
                 try:
                     temp_color.remove(self.explored[i])
                 except:
-                    pass    
+                    pass
 
-        if len(temp_color)==0:
+        if len(temp_color) == 0:
             return None
         else:
-            return temp_color       
+            return temp_color
 
 
-# ------------------------------
-# 1️⃣ Input number of nodes
-# ------------------------------
+# ----------------------------------------------------
+# UI Input - Number of Nodes
+# ----------------------------------------------------
 n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
 
-# ------------------------------
-# 2️⃣ Create nodes dictionary
-# ------------------------------
+# Create nodes dictionary
 dic = {chr(ord('a') + i): [] for i in range(n)}
 
-# Display node dictionary horizontally
+# Display nodes dictionary
 st.write("Nodes dictionary:")
 num_cols_nodes = min(len(dic), 5)
 cols_nodes = st.columns(num_cols_nodes)
@@ -95,18 +102,23 @@ for idx, key in enumerate(dic.keys()):
     col = cols_nodes[idx % num_cols_nodes]
     col.write(f"{key}: {dic[key]}")
 
-# ------------------------------
-# 3️⃣ Generate all possible edges
-# ------------------------------
+# ----------------------------------------------------
+# UI Input - Number of Colors + Generate Random Colors
+# ----------------------------------------------------
+num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
+generated_colors = [random_hex_color() for _ in range(num_colors)]
+st.write("Generated colors:", generated_colors)
+
+# ----------------------------------------------------
+# Generate All Possible Edges
+# ----------------------------------------------------
 edges = []
 keys = list(dic.keys())
 for i in range(len(keys)):
     for j in range(i + 1, len(keys)):
         edges.append((keys[i], keys[j]))
 
-# ------------------------------
-# 4️⃣ Let user select edges (horizontal checkboxes)
-# ------------------------------
+# Select edges
 st.write("Select edges to include:")
 num_cols_edges = min(len(edges), 5)
 cols_edges = st.columns(num_cols_edges)
@@ -117,30 +129,29 @@ for idx, edge in enumerate(edges):
     if col.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
         selected_edges.append(edge)
 
-# ------------------------------
-# 5️⃣ Update dictionary with selected edges
-# ------------------------------
+# Update dictionary with selected edges
 for a, b in selected_edges:
     dic[a].append(b)
     dic[b].append(a)
 
-# Display updated dictionary horizontally
+# Display updated dictionary
 st.write("Updated dictionary with selected edges:")
 cols_updated = st.columns(num_cols_nodes)
 for idx, key in enumerate(dic.keys()):
     col = cols_updated[idx % num_cols_nodes]
     col.write(f"{key}: {dic[key]}")
 
-# ------------------------------
-# 6️⃣ Backtracking coloring
-# ------------------------------
-b = Backtracking(dic)
+# ----------------------------------------------------
+# Run Backtracking Coloring
+# ----------------------------------------------------
+b = Backtracking(dic, generated_colors)
 node = list(b.graph.keys())[0]
 visual_dic = b.dive(node, b.color)
 
 st.write("Graph coloring solution:")
+st.write(visual_dic)
 
-# ------------------------------
-# 7️⃣ Draw the graph
-# ------------------------------
+# ----------------------------------------------------
+# Draw Graph
+# ----------------------------------------------------
 draw_graph(dic, visual_dic)
