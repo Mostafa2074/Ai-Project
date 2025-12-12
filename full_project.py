@@ -11,14 +11,14 @@ import colorsys
 def generate_distinct_colors(n):
     colors = []
     for i in range(n):
-        hue = i / n
+        hue = i / n                      # evenly spaced hues
         r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
         colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
     return colors
 
 
 # ----------------------------------------------------
-# Draw Graph Function
+# Draw Graph Function (SMALLER VISUAL)
 # ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
@@ -33,11 +33,13 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    plt.figure(figsize=(8, 6))
+    # SMALLER FIGURE SIZE
+    plt.figure(figsize=(5, 4))
+
     nx.draw(
         G, pos, with_labels=True,
-        node_color=colors, node_size=800,
-        font_size=12, font_weight='bold'
+        node_color=colors, node_size=700,
+        font_size=11, font_weight='bold'
     )
 
     st.pyplot(plt)
@@ -86,10 +88,7 @@ class Backtracking:
                 except:
                     pass
 
-        if len(temp_color) == 0:
-            return None
-        else:
-            return temp_color
+        return temp_color if temp_color else None
 
 
 # ----------------------------------------------------
@@ -97,11 +96,8 @@ class Backtracking:
 # ----------------------------------------------------
 st.set_page_config(layout="wide")
 
-# Sidebar for details
 sidebar = st.sidebar
 sidebar.title("Graph Coloring Details")
-
-# Main container (center aligned)
 center_area = st.container()
 
 
@@ -124,12 +120,11 @@ for key in dic:
 
 
 # ----------------------------------------------------
-# Colors selection (CENTER)
+# Colors selection (CENTER) — NO PRINTING IN CENTER
 # ----------------------------------------------------
 with center_area:
     num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
     generated_colors = generate_distinct_colors(num_colors)
-    st.write("Generated Distinct Colors:", generated_colors)
 
 # Sidebar also displays them
 sidebar.subheader("Colors Used")
@@ -180,7 +175,7 @@ sidebar.write(visual_dic)
 
 
 # ----------------------------------------------------
-# Draw Graph (CENTER)
+# Draw Graph (CENTER) — SMALLER SIZE
 # ----------------------------------------------------
 with center_area:
     st.subheader("Colored Graph Visualization")
