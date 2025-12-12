@@ -102,9 +102,9 @@ dic = {chr(ord('a') + i): [] for i in range(num_nodes)}
 generated_colors = generate_distinct_colors(num_colors)
 
 # Show node and color details in sidebar
-sidebar.subheader("Nodes Dictionary")
-for key in dic:
-    sidebar.write(f"{key}: {dic[key]}")
+# sidebar.subheader("Nodes Dictionary")
+# for key in dic:
+#     sidebar.write(f"{key}: {dic[key]}")
 
 sidebar.subheader("Colors Used")
 sidebar.write(generated_colors)
@@ -157,3 +157,4 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
