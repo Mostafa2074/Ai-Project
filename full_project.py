@@ -148,8 +148,8 @@ b = Backtracking(dic, generated_colors)
 start_node = list(dic.keys())[0]
 visual_dic = b.dive(start_node, b.color)
 
-sidebar.subheader("Graph Coloring Result")
-sidebar.write(visual_dic)
+# sidebar.subheader("Graph Coloring Result")
+# sidebar.write(visual_dic)
 
 # ----------------------------------------------------
 # Draw Graph in Main Area
@@ -157,5 +157,6 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
