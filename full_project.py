@@ -137,12 +137,19 @@ with center_area:
                 selected_edges.append((a, b))
 
 # ----------------------------------------------------
-# Update adjacency dictionary
+# Update adjacency dictionary dynamically
 # ----------------------------------------------------
 dic = {k: [] for k in st.session_state.dic.keys()}
-for a, b in selected_edges:
-    dic[a].append(b)
-    dic[b].append(a)
+
+# Only include edges that are currently checked
+for (a, b), checked in st.session_state.edge_state.items():
+    if checked:
+        dic[a].append(b)
+        dic[b].append(a)
+
+# Also update selected_edges list
+selected_edges = [(a, b) for (a, b), checked in st.session_state.edge_state.items() if checked]
+
 
 # ----------------------------------------------------
 # Backtracking coloring
@@ -157,3 +164,4 @@ visual_dic = b.dive(start_node, b.color)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
