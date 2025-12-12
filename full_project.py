@@ -6,19 +6,19 @@ import colorsys
 
 
 # ----------------------------------------------------
-# Generate Distinct Colors (Not Similar)
+# Generate Distinct Colors
 # ----------------------------------------------------
 def generate_distinct_colors(n):
     colors = []
     for i in range(n):
-        hue = i / n                      # evenly spaced hues
-        r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
+        hue = i / n
+        r, g, b = colorsys.hsv_to_rgb(hue, 0.9, 1.0)
         colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
     return colors
 
 
 # ----------------------------------------------------
-# Draw Graph Function (SMALLER VISUAL)
+# Draw Graph Function (SMALLER SIZE)
 # ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
@@ -33,13 +33,11 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    # SMALLER FIGURE SIZE
-    plt.figure(figsize=(5, 4))
-
+    plt.figure(figsize=(4, 3))     # <<< Smaller graph
     nx.draw(
         G, pos, with_labels=True,
-        node_color=colors, node_size=700,
-        font_size=11, font_weight='bold'
+        node_color=colors, node_size=500,
+        font_size=10, font_weight='bold'
     )
 
     st.pyplot(plt)
@@ -50,7 +48,6 @@ def draw_graph(graph, node_colors=None):
 # Backtracking Class
 # ----------------------------------------------------
 class Backtracking:
-
     def __init__(self, graph, colors):
         self.graph = graph
         self.explored = {}
@@ -92,91 +89,65 @@ class Backtracking:
 
 
 # ----------------------------------------------------
-# PAGE LAYOUT
+# UI Layout (Center + Side Details)
 # ----------------------------------------------------
-st.set_page_config(layout="wide")
-
-sidebar = st.sidebar
-sidebar.title("Graph Coloring Details")
-center_area = st.container()
+left, center, right = st.columns([1, 2, 1])
 
 
 # ----------------------------------------------------
-# UI Input - Number of Nodes (CENTER)
+# CENTER: Graph Controls
 # ----------------------------------------------------
-with center_area:
-    st.header("Graph Coloring Visualizer")
-    st.write("Customize the graph and choose coloring options.")
+with center:
+    st.header("Colored Graph Visualization")
 
+    # Number of nodes
     n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
 
-# Create nodes dictionary
-dic = {chr(ord('a') + i): [] for i in range(n)}
+    # Create nodes dictionary
+    dic = {chr(ord('a') + i): [] for i in range(n)}
 
-# Sidebar shows dictionary
-sidebar.subheader("Nodes Dictionary")
-for key in dic:
-    sidebar.write(f"{key}: {dic[key]}")
-
-
-# ----------------------------------------------------
-# Colors selection (CENTER) — NO PRINTING IN CENTER
-# ----------------------------------------------------
-with center_area:
-    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
-    generated_colors = generate_distinct_colors(num_colors)
-
-# Sidebar also displays them
-sidebar.subheader("Colors Used")
-sidebar.write(generated_colors)
+    # Number of colors
+    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=4)
+    generated_colors = generate_distinct_colors(num_colors)   # Distinct colors only
 
 
-# ----------------------------------------------------
-# Generate All Possible Edges
-# ----------------------------------------------------
-edges = []
-keys = list(dic.keys())
-for i in range(len(keys)):
-    for j in range(i + 1, len(keys)):
-        edges.append((keys[i], keys[j]))
+    # Generate All Possible Edges
+    edges = []
+    keys = list(dic.keys())
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            edges.append((keys[i], keys[j]))
 
-# CENTER: select edges
-with center_area:
-    st.subheader("Select Edges")
-    num_cols_edges = 3
-    cols_edges = st.columns(num_cols_edges)
-
+    st.subheader("Select edges")
     selected_edges = []
     for idx, edge in enumerate(edges):
-        col = cols_edges[idx % num_cols_edges]
-        if col.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+        if st.checkbox(f"{edge[0]} - {edge[1]}", key=f"edge_{idx}"):
             selected_edges.append(edge)
 
-# Update dictionary
-for a, b in selected_edges:
-    dic[a].append(b)
-    dic[b].append(a)
+    # Update adjacency list
+    for a, b in selected_edges:
+        dic[a].append(b)
+        dic[b].append(a)
 
-# Sidebar: updated dictionary
-sidebar.subheader("Updated Dictionary with Edges")
-for key in dic:
-    sidebar.write(f"{key}: {dic[key]}")
+    # Solve coloring
+    b = Backtracking(dic, generated_colors)
+    node = list(b.graph.keys())[0]
+    visual_dic = b.dive(node, b.color)
 
+    st.subheader("Graph Coloring Solution")
+    st.write(visual_dic)
 
-# ----------------------------------------------------
-# Run Backtracking Coloring
-# ----------------------------------------------------
-b = Backtracking(dic, generated_colors)
-node = list(b.graph.keys())[0]
-visual_dic = b.dive(node, b.color)
-
-sidebar.subheader("Coloring Result")
-sidebar.write(visual_dic)
-
-
-# ----------------------------------------------------
-# Draw Graph (CENTER) — SMALLER SIZE
-# ----------------------------------------------------
-with center_area:
-    st.subheader("Colored Graph Visualization")
+    # Draw Graph
     draw_graph(dic, visual_dic)
+
+
+# ----------------------------------------------------
+# RIGHT SIDE DETAILS
+# ----------------------------------------------------
+with right:
+    st.subheader("Nodes")
+    for key in dic:
+        st.write(f"{key}: {dic[key]}")
+
+    st.subheader("Used Colors")
+    st.write(generated_colors)
