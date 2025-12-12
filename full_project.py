@@ -146,16 +146,17 @@ for i in range(len(keys)):
         edges.append((keys[i], keys[j]))
 
 # CENTER: select edges
+# CENTER: select edges inside an expander
 with center_area:
     st.subheader("Select Edges")
-    num_cols_edges = 3
-    cols_edges = st.columns(num_cols_edges)
+    
+    # Collapsible section
+    with st.expander("Click to select edges"):
+        selected_edges = []
+        for idx, edge in enumerate(edges):
+            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+                selected_edges.append(edge)
 
-    selected_edges = []
-    for idx, edge in enumerate(edges):
-        col = cols_edges[idx % num_cols_edges]
-        if col.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
-            selected_edges.append(edge)
 
 # Update dictionary
 for a, b in selected_edges:
@@ -185,6 +186,7 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
 
