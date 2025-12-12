@@ -11,7 +11,7 @@ import colorsys
 def generate_distinct_colors(n):
     colors = []
     for i in range(n):
-        hue = i / n                      # evenly spaced hues
+        hue = i / n
         r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
         colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
     return colors
@@ -93,27 +93,48 @@ class Backtracking:
 
 
 # ----------------------------------------------------
-# UI Input - Number of Nodes
+# PAGE LAYOUT
 # ----------------------------------------------------
-n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
+st.set_page_config(layout="wide")
+
+# Sidebar for details
+sidebar = st.sidebar
+sidebar.title("Graph Coloring Details")
+
+# Main container (center aligned)
+center_area = st.container()
+
+
+# ----------------------------------------------------
+# UI Input - Number of Nodes (CENTER)
+# ----------------------------------------------------
+with center_area:
+    st.header("Graph Coloring Visualizer")
+    st.write("Customize the graph and choose coloring options.")
+
+    n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
 
 # Create nodes dictionary
 dic = {chr(ord('a') + i): [] for i in range(n)}
 
-# Display nodes dictionary
-st.write("Nodes dictionary:")
-num_cols_nodes = min(len(dic), 5)
-cols_nodes = st.columns(num_cols_nodes)
-for idx, key in enumerate(dic.keys()):
-    col = cols_nodes[idx % num_cols_nodes]
-    col.write(f"{key}: {dic[key]}")
+# Sidebar shows dictionary
+sidebar.subheader("Nodes Dictionary")
+for key in dic:
+    sidebar.write(f"{key}: {dic[key]}")
+
 
 # ----------------------------------------------------
-# UI Input - Number of Colors (Distinct Colors)
+# Colors selection (CENTER)
 # ----------------------------------------------------
-num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
-generated_colors = generate_distinct_colors(num_colors)
-st.write("Generated Distinct Colors:", generated_colors)
+with center_area:
+    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
+    generated_colors = generate_distinct_colors(num_colors)
+    st.write("Generated Distinct Colors:", generated_colors)
+
+# Sidebar also displays them
+sidebar.subheader("Colors Used")
+sidebar.write(generated_colors)
+
 
 # ----------------------------------------------------
 # Generate All Possible Edges
@@ -124,28 +145,28 @@ for i in range(len(keys)):
     for j in range(i + 1, len(keys)):
         edges.append((keys[i], keys[j]))
 
-# Select edges
-st.write("Select edges to include:")
-num_cols_edges = min(len(edges), 5)
-cols_edges = st.columns(num_cols_edges)
+# CENTER: select edges
+with center_area:
+    st.subheader("Select Edges")
+    num_cols_edges = 3
+    cols_edges = st.columns(num_cols_edges)
 
-selected_edges = []
-for idx, edge in enumerate(edges):
-    col = cols_edges[idx % num_cols_edges]
-    if col.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
-        selected_edges.append(edge)
+    selected_edges = []
+    for idx, edge in enumerate(edges):
+        col = cols_edges[idx % num_cols_edges]
+        if col.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+            selected_edges.append(edge)
 
-# Update dictionary with selected edges
+# Update dictionary
 for a, b in selected_edges:
     dic[a].append(b)
     dic[b].append(a)
 
-# Display updated dictionary
-st.write("Updated dictionary with selected edges:")
-cols_updated = st.columns(num_cols_nodes)
-for idx, key in enumerate(dic.keys()):
-    col = cols_updated[idx % num_cols_nodes]
-    col.write(f"{key}: {dic[key]}")
+# Sidebar: updated dictionary
+sidebar.subheader("Updated Dictionary with Edges")
+for key in dic:
+    sidebar.write(f"{key}: {dic[key]}")
+
 
 # ----------------------------------------------------
 # Run Backtracking Coloring
@@ -154,10 +175,13 @@ b = Backtracking(dic, generated_colors)
 node = list(b.graph.keys())[0]
 visual_dic = b.dive(node, b.color)
 
-st.write("Graph coloring solution:")
-st.write(visual_dic)
+sidebar.subheader("Coloring Result")
+sidebar.write(visual_dic)
+
 
 # ----------------------------------------------------
-# Draw Graph
+# Draw Graph (CENTER)
 # ----------------------------------------------------
-draw_graph(dic, visual_dic)
+with center_area:
+    st.subheader("Colored Graph Visualization")
+    draw_graph(dic, visual_dic)
