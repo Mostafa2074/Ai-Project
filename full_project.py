@@ -106,8 +106,8 @@ generated_colors = generate_distinct_colors(num_colors)
 # for key in dic:
 #     sidebar.write(f"{key}: {dic[key]}")
 
-sidebar.subheader("Colors Used")
-sidebar.write(generated_colors)
+# sidebar.subheader("Colors Used")
+# sidebar.write(generated_colors)
 
 # ----------------------------------------------------
 # Generate All Possible Edges
@@ -137,9 +137,9 @@ for a, b in selected_edges:
     dic[b].append(a)
 
 # Sidebar: show updated dictionary
-sidebar.subheader("Updated Dictionary with Edges")
-for key in dic:
-    sidebar.write(f"{key}: {dic[key]}")
+# sidebar.subheader("Updated Dictionary with Edges")
+# for key in dic:
+#     sidebar.write(f"{key}: {dic[key]}")
 
 # ----------------------------------------------------
 # Backtracking coloring
@@ -157,4 +157,5 @@ sidebar.write(visual_dic)
 with center_area:
     st.subheader("Colored Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
