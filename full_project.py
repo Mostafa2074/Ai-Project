@@ -18,6 +18,9 @@ def generate_distinct_colors(n):
 # ----------------------------------------------------
 # Draw Graph Function
 # ----------------------------------------------------
+# ----------------------------------------------------
+# Draw Graph Function (SMALLER VISUAL)
+# ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
     for node, neighbors in graph.items():
@@ -31,12 +34,18 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    fig, ax = plt.subplots(figsize=(5, 4))
-    nx.draw(G, pos, with_labels=True, node_color=colors, node_size=300,
-            font_size=10, font_weight='bold', ax=ax)
+    # Smaller figure
+    fig, ax = plt.subplots(figsize=(3, 2))  # smaller figure
+    nx.draw(
+        G, pos, with_labels=True,
+        node_color=colors, node_size=300,
+        font_size=8, font_weight='bold',
+        ax=ax
+    )
     plt.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, use_container_width=False)
     plt.close(fig)
+
 
 # ----------------------------------------------------
 # Backtracking Class
@@ -137,3 +146,4 @@ sidebar.write(visual_dic)
 with center_area:
     st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
+
