@@ -51,7 +51,7 @@ def draw_graph(graph, node_colors=None):
     col1, col2, col3 = st.columns([1, 3, 1])  # wider center column
     with col2:  # Center column
         # Wider figure
-        fig, ax = plt.subplots(figsize=(6, 3))  # width 6, height 3
+        fig, ax = plt.subplots(figsize=(10, 5))  # width 6, height 3
         nx.draw(
             G, pos, with_labels=True,
             node_color=colors, node_size=300,
@@ -164,6 +164,7 @@ sidebar.write(visual_dic)
 with center_area:
     st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
 
