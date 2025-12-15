@@ -24,7 +24,14 @@ def generate_distinct_colors(n):
 # ----------------------------------------------------
 # Draw Graph Function (SMALLER AND CENTERED)
 # ----------------------------------------------------
+# ----------------------------------------------------
+# Draw Graph Function (WIDER AND CENTERED)
+# ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    import streamlit as st
+
     # Create the NetworkX graph
     G = nx.Graph()
     for node, neighbors in graph.items():
@@ -41,10 +48,10 @@ def draw_graph(graph, node_colors=None):
         colors = "lightblue"
 
     # Create 3 columns to center the figure
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 3, 1])  # wider center column
     with col2:  # Center column
-        # Smaller figure
-        fig, ax = plt.subplots(figsize=(10, 2))  # compact figure
+        # Wider figure
+        fig, ax = plt.subplots(figsize=(6, 3))  # width 6, height 3
         nx.draw(
             G, pos, with_labels=True,
             node_color=colors, node_size=300,
@@ -54,6 +61,7 @@ def draw_graph(graph, node_colors=None):
         plt.tight_layout()
         st.pyplot(fig, use_container_width=False)
         plt.close(fig)
+
 
 
 
@@ -156,6 +164,7 @@ sidebar.write(visual_dic)
 with center_area:
     st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
 
