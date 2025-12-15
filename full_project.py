@@ -21,30 +21,40 @@ def generate_distinct_colors(n):
 # ----------------------------------------------------
 # Draw Graph Function (SMALLER VISUAL)
 # ----------------------------------------------------
+# ----------------------------------------------------
+# Draw Graph Function (SMALLER AND CENTERED)
+# ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
+    # Create the NetworkX graph
     G = nx.Graph()
     for node, neighbors in graph.items():
         for nb in neighbors:
             G.add_edge(node, nb)
 
+    # Layout positions
     pos = nx.spring_layout(G, k=0.8, iterations=200)
 
+    # Node colors
     if node_colors:
         colors = [node_colors.get(node, "lightblue") for node in G.nodes]
     else:
         colors = "lightblue"
 
-    # Smaller figure
-    fig, ax = plt.subplots(figsize=(3, 2))  # smaller figure
-    nx.draw(
-        G, pos, with_labels=True,
-        node_color=colors, node_size=300,
-        font_size=8, font_weight='bold',
-        ax=ax
-    )
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=False)
-    plt.close(fig)
+    # Create 3 columns to center the figure
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:  # Center column
+        # Smaller figure
+        fig, ax = plt.subplots(figsize=(3, 2))  # compact figure
+        nx.draw(
+            G, pos, with_labels=True,
+            node_color=colors, node_size=300,
+            font_size=8, font_weight='bold',
+            ax=ax
+        )
+        plt.tight_layout()
+        st.pyplot(fig, use_container_width=False)
+        plt.close(fig)
+
 
 
 # ----------------------------------------------------
@@ -146,4 +156,5 @@ sidebar.write(visual_dic)
 with center_area:
     st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
