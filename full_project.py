@@ -27,6 +27,9 @@ def generate_distinct_colors(n):
 # ----------------------------------------------------
 # Draw Graph Function (WIDER AND CENTERED)
 # ----------------------------------------------------
+# ----------------------------------------------------
+# Draw Graph Function (FULL WIDTH CENTERED)
+# ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     import networkx as nx
     import matplotlib.pyplot as plt
@@ -47,20 +50,21 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    # Create 3 columns to center the figure
-    col1, col2, col3 = st.columns([1, 3, 1])  # wider center column
+    # Create 3 columns to center the figure, center column is now very wide
+    col1, col2, col3 = st.columns([0.5, 6, 0.5])
     with col2:  # Center column
-        # Wider figure
-        fig, ax = plt.subplots(figsize=(30, 7))  # width 6, height 3
+        # Very wide figure
+        fig, ax = plt.subplots(figsize=(16, 6))  # width 16, height 6
         nx.draw(
             G, pos, with_labels=True,
-            node_color=colors, node_size=300,
-            font_size=8, font_weight='bold',
+            node_color=colors, node_size=400,
+            font_size=10, font_weight='bold',
             ax=ax
         )
         plt.tight_layout()
         st.pyplot(fig, use_container_width=False)
         plt.close(fig)
+
 
 
 
@@ -164,6 +168,7 @@ sidebar.write(visual_dic)
 with center_area:
     st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
+
 
 
 
