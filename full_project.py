@@ -4,21 +4,19 @@ import streamlit as st
 import random
 import colorsys
 
-
 # ----------------------------------------------------
-# Generate Distinct Colors (Not Similar)
+# Generate Distinct Colors
 # ----------------------------------------------------
 def generate_distinct_colors(n):
     colors = []
     for i in range(n):
-        hue = i / n                      # evenly spaced hues
+        hue = i / n
         r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
         colors.append('#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)))
     return colors
 
-
 # ----------------------------------------------------
-# Draw Graph Function (SMALLER VISUAL)
+# Draw Graph Function
 # ----------------------------------------------------
 def draw_graph(graph, node_colors=None):
     G = nx.Graph()
@@ -33,29 +31,17 @@ def draw_graph(graph, node_colors=None):
     else:
         colors = "lightblue"
 
-    # Smaller figure
-    fig, ax = plt.subplots(figsize=(3, 2))  # small figure
-    nx.draw(
-        G, pos, with_labels=True,
-        node_color=colors, node_size=300,
-        font_size=8, font_weight='bold',
-        ax=ax
-    )
+    fig, ax = plt.subplots(figsize=(5, 4))
+    nx.draw(G, pos, with_labels=True, node_color=colors, node_size=300,
+            font_size=10, font_weight='bold', ax=ax)
     plt.tight_layout()
-
-    # VERY IMPORTANT: use_container_width=False keeps it small
-    st.pyplot(fig, use_container_width=False)
+    st.pyplot(fig, use_container_width=True)
     plt.close(fig)
-
-
-
-
 
 # ----------------------------------------------------
 # Backtracking Class
 # ----------------------------------------------------
 class Backtracking:
-
     def __init__(self, graph, colors):
         self.graph = graph
         self.explored = {}
@@ -81,7 +67,6 @@ class Backtracking:
                     for key in slice_keys:
                         del self.explored[key]
                     return self.dive(node, clr[1:])
-
         return self.explored
 
     def search(self, node, colors):
@@ -92,86 +77,55 @@ class Backtracking:
                     temp_color.remove(self.explored[i])
                 except:
                     pass
-
         return temp_color if temp_color else None
 
-
 # ----------------------------------------------------
-# PAGE LAYOUT
+# Streamlit Layout
 # ----------------------------------------------------
 st.set_page_config(layout="wide")
-
 sidebar = st.sidebar
-sidebar.title("Graph Coloring Details")
 center_area = st.container()
 
+# Sidebar Inputs
+sidebar.title("Graph Coloring Options")
 
-# ----------------------------------------------------
-# UI Input - Number of Nodes (CENTER)
-# ----------------------------------------------------
-with center_area:
-    st.header("Graph Coloring Visualizer")
-    st.write("Customize the graph and choose coloring options.")
-
-    n = st.number_input("Enter number of nodes", min_value=2, step=1, value=5)
+# Number of nodes
+num_nodes = sidebar.number_input("Number of nodes", min_value=2, step=1, value=5)
 
 # Create nodes dictionary
-dic = {chr(ord('a') + i): [] for i in range(n)}
+dic = {chr(ord('a') + i): [] for i in range(num_nodes)}
 
-# Sidebar shows dictionary
-sidebar.subheader("Nodes Dictionary")
-for key in dic:
-    sidebar.write(f"{key}: {dic[key]}")
+# Number of colors
+num_colors = sidebar.number_input("Number of colors", min_value=1, max_value=20, value=3)
+generated_colors = generate_distinct_colors(num_colors)
 
-
-# ----------------------------------------------------
-# Colors selection (CENTER) — NO PRINTING IN CENTER
-# ----------------------------------------------------
-with center_area:
-    num_colors = st.number_input("Select number of colors", min_value=1, max_value=20, value=3)
-    generated_colors = generate_distinct_colors(num_colors)
-
-# Sidebar also displays them
-sidebar.subheader("Colors Used")
-sidebar.write(generated_colors)
-
-
-# ----------------------------------------------------
-# Generate All Possible Edges
-# ----------------------------------------------------
+# Edge selection in sidebar
+sidebar.subheader("Select Edges")
 edges = []
 keys = list(dic.keys())
 for i in range(len(keys)):
     for j in range(i + 1, len(keys)):
         edges.append((keys[i], keys[j]))
 
-# CENTER: select edges
-# CENTER: select edges inside an expander
-with center_area:
-    st.subheader("Select Edges")
-    
-    # Collapsible section
-    with st.expander("Click to select edges"):
-        selected_edges = []
-        for idx, edge in enumerate(edges):
-            if st.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
-                selected_edges.append(edge)
+selected_edges = []
+for idx, edge in enumerate(edges):
+    if sidebar.checkbox(f"{edge[0]} - {edge[1]}", value=False, key=f"edge_{idx}"):
+        selected_edges.append(edge)
 
-
-# Update dictionary
+# Update dictionary with selected edges
 for a, b in selected_edges:
     dic[a].append(b)
     dic[b].append(a)
 
-# Sidebar: updated dictionary
-sidebar.subheader("Updated Dictionary with Edges")
+# Sidebar display of dictionary and colors
+sidebar.subheader("Nodes Dictionary with Edges")
 for key in dic:
     sidebar.write(f"{key}: {dic[key]}")
 
+sidebar.subheader("Colors Used")
+sidebar.write(generated_colors)
 
-# ----------------------------------------------------
-# Run Backtracking Coloring
-# ----------------------------------------------------
+# Run Backtracking
 b = Backtracking(dic, generated_colors)
 node = list(b.graph.keys())[0]
 visual_dic = b.dive(node, b.color)
@@ -179,10 +133,7 @@ visual_dic = b.dive(node, b.color)
 sidebar.subheader("Coloring Result")
 sidebar.write(visual_dic)
 
-
-# ----------------------------------------------------
-# Draw Graph (CENTER) — SMALLER SIZE
-# ----------------------------------------------------
+# Center area: visualization only
 with center_area:
-    st.subheader("Colored Graph Visualization")
+    st.header("Graph Visualization")
     draw_graph(dic, visual_dic)
